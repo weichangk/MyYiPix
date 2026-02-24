@@ -1,0 +1,28 @@
+# Build stage
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+WORKDIR /src
+
+# Copy solution and project files
+COPY YiPix.sln .
+COPY src/BuildingBlocks/Common/YiPix.BuildingBlocks.Common.csproj src/BuildingBlocks/Common/
+COPY src/BuildingBlocks/Contracts/YiPix.BuildingBlocks.Contracts.csproj src/BuildingBlocks/Contracts/
+COPY src/BuildingBlocks/EventBus/YiPix.BuildingBlocks.EventBus.csproj src/BuildingBlocks/EventBus/
+COPY src/BuildingBlocks/Logging/YiPix.BuildingBlocks.Logging.csproj src/BuildingBlocks/Logging/
+COPY src/BuildingBlocks/Security/YiPix.BuildingBlocks.Security.csproj src/BuildingBlocks/Security/
+COPY src/Services/AuthService/YiPix.Services.Auth.csproj src/Services/AuthService/
+COPY src/Services/UserService/YiPix.Services.User.csproj src/Services/UserService/
+COPY src/Services/SubscriptionService/YiPix.Services.Subscription.csproj src/Services/SubscriptionService/
+COPY src/Services/PaymentService/YiPix.Services.Payment.csproj src/Services/PaymentService/
+COPY src/Services/DownloadService/YiPix.Services.Download.csproj src/Services/DownloadService/
+COPY src/Services/ProductService/YiPix.Services.Product.csproj src/Services/ProductService/
+COPY src/Services/AnalyticsService/YiPix.Services.Analytics.csproj src/Services/AnalyticsService/
+COPY src/Services/TaskService/YiPix.Services.TaskProcessing.csproj src/Services/TaskService/
+COPY src/Services/FileService/YiPix.Services.FileStorage.csproj src/Services/FileService/
+COPY src/Workers/AIWorker/YiPix.Workers.AI.csproj src/Workers/AIWorker/
+COPY src/Workers/WebhookWorker/YiPix.Workers.Webhook.csproj src/Workers/WebhookWorker/
+COPY src/Workers/AnalyticsWorker/YiPix.Workers.Analytics.csproj src/Workers/AnalyticsWorker/
+
+RUN dotnet restore
+
+# Copy all source code
+COPY . .

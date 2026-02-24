@@ -1,0 +1,276 @@
+version: '3.8'
+
+services:
+  # ============================================================
+  # Infrastructure
+  # ============================================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: yipix-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: yipix
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: yipix-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: yipix-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ============================================================
+  # API Services
+  # ============================================================
+  auth-service:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.auth
+    container_name: yipix-auth
+    ports:
+      - "5001:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=yipix;Username=postgres;Password=postgres
+      - ConnectionStrings__RabbitMQ=amqp://guest:guest@rabbitmq:5672
+      - ConnectionStrings__Redis=redis:6379
+      - JwtSettings__Secret=YiPix-Super-Secret-Key-Must-Be-At-Least-32-Characters-Long!
+      - JwtSettings__Issuer=YiPix
+      - JwtSettings__Audience=YiPixClients
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  user-service:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.user
+    container_name: yipix-user
+    ports:
+      - "5002:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=yipix;Username=postgres;Password=postgres
+      - ConnectionStrings__RabbitMQ=amqp://guest:guest@rabbitmq:5672
+      - ConnectionStrings__Redis=redis:6379
+      - JwtSettings__Secret=YiPix-Super-Secret-Key-Must-Be-At-Least-32-Characters-Long!
+      - JwtSettings__Issuer=YiPix
+      - JwtSettings__Audience=YiPixClients
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  subscription-service:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.subscription
+    container_name: yipix-subscription
+    ports:
+      - "5003:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=yipix;Username=postgres;Password=postgres
+      - ConnectionStrings__RabbitMQ=amqp://guest:guest@rabbitmq:5672
+      - ConnectionStrings__Redis=redis:6379
+      - JwtSettings__Secret=YiPix-Super-Secret-Key-Must-Be-At-Least-32-Characters-Long!
+      - JwtSettings__Issuer=YiPix
+      - JwtSettings__Audience=YiPixClients
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  payment-service:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.payment
+    container_name: yipix-payment
+    ports:
+      - "5004:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=yipix;Username=postgres;Password=postgres
+      - ConnectionStrings__RabbitMQ=amqp://guest:guest@rabbitmq:5672
+      - ConnectionStrings__Redis=redis:6379
+      - JwtSettings__Secret=YiPix-Super-Secret-Key-Must-Be-At-Least-32-Characters-Long!
+      - JwtSettings__Issuer=YiPix
+      - JwtSettings__Audience=YiPixClients
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  download-service:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.download
+    container_name: yipix-download
+    ports:
+      - "5005:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=yipix;Username=postgres;Password=postgres
+      - ConnectionStrings__RabbitMQ=amqp://guest:guest@rabbitmq:5672
+      - ConnectionStrings__Redis=redis:6379
+      - JwtSettings__Secret=YiPix-Super-Secret-Key-Must-Be-At-Least-32-Characters-Long!
+      - JwtSettings__Issuer=YiPix
+      - JwtSettings__Audience=YiPixClients
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  product-service:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.product
+    container_name: yipix-product
+    ports:
+      - "5006:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=yipix;Username=postgres;Password=postgres
+      - JwtSettings__Secret=YiPix-Super-Secret-Key-Must-Be-At-Least-32-Characters-Long!
+      - JwtSettings__Issuer=YiPix
+      - JwtSettings__Audience=YiPixClients
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  analytics-service:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.analytics
+    container_name: yipix-analytics
+    ports:
+      - "5007:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=yipix;Username=postgres;Password=postgres
+      - JwtSettings__Secret=YiPix-Super-Secret-Key-Must-Be-At-Least-32-Characters-Long!
+      - JwtSettings__Issuer=YiPix
+      - JwtSettings__Audience=YiPixClients
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  task-service:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.task
+    container_name: yipix-task
+    ports:
+      - "5008:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=yipix;Username=postgres;Password=postgres
+      - ConnectionStrings__RabbitMQ=amqp://guest:guest@rabbitmq:5672
+      - ConnectionStrings__Redis=redis:6379
+      - JwtSettings__Secret=YiPix-Super-Secret-Key-Must-Be-At-Least-32-Characters-Long!
+      - JwtSettings__Issuer=YiPix
+      - JwtSettings__Audience=YiPixClients
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  file-service:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.file
+    container_name: yipix-file
+    ports:
+      - "5009:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=yipix;Username=postgres;Password=postgres
+      - JwtSettings__Secret=YiPix-Super-Secret-Key-Must-Be-At-Least-32-Characters-Long!
+      - JwtSettings__Issuer=YiPix
+      - JwtSettings__Audience=YiPixClients
+    volumes:
+      - file_uploads:/app/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # ============================================================
+  # Workers
+  # ============================================================
+  ai-worker:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.aiworker
+    container_name: yipix-ai-worker
+    environment:
+      - ConnectionStrings__RabbitMQ=amqp://guest:guest@rabbitmq:5672
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  webhook-worker:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.webhookworker
+    container_name: yipix-webhook-worker
+    environment:
+      - ConnectionStrings__RabbitMQ=amqp://guest:guest@rabbitmq:5672
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  analytics-worker:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.analyticsworker
+    container_name: yipix-analytics-worker
+    environment:
+      - ConnectionStrings__RabbitMQ=amqp://guest:guest@rabbitmq:5672
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+  redis_data:
+  rabbitmq_data:
+  file_uploads:
