@@ -1,7 +1,5 @@
-version: '3.8'
-
 # Use this for local development - only starts infrastructure services
-# Run with: docker-compose -f docker-compose.infra.yml up -d
+# Run with: docker compose -f docker-compose.infra.yml up -d
 
 services:
   postgres:
