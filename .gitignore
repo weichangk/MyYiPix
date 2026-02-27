@@ -1,7 +1,6 @@
 ## .NET
 bin/
 obj/
-*.user
 *.suo
 *.userosscache
 *.sln.docstates
@@ -9,6 +8,8 @@ obj/
 ## Visual Studio
 .vs/
 *.rsuser
+*.user
+!docker/Dockerfile.user
 
 ## Rider
 .idea/
