@@ -3,6 +3,7 @@ using YiPix.BuildingBlocks.Common.Middleware;
 using YiPix.BuildingBlocks.EventBus;
 using YiPix.BuildingBlocks.Logging;
 using YiPix.BuildingBlocks.Security;
+using Scalar.AspNetCore;
 using YiPix.Services.Auth.Application;
 using YiPix.Services.Auth.Infrastructure.Data;
 
@@ -45,6 +46,7 @@ app.UseMiddleware<GlobalExceptionMiddleware>();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+    app.MapScalarApiReference();
 }
 
 app.UseHttpsRedirection();

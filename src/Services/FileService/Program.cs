@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using YiPix.BuildingBlocks.Common.Middleware;
 using YiPix.BuildingBlocks.Logging;
 using YiPix.BuildingBlocks.Security;
+using Scalar.AspNetCore;
 using YiPix.Services.FileStorage.Application;
 using YiPix.Services.FileStorage.Infrastructure.Data;
 using YiPix.Services.FileStorage.Infrastructure.Storage;
@@ -34,6 +35,7 @@ app.UseMiddleware<GlobalExceptionMiddleware>();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+    app.MapScalarApiReference();
 }
 
 app.UseHttpsRedirection();
