@@ -8,7 +8,7 @@ namespace YiPix.Services.Download.Application;
 
 public record ReleaseDto(Guid Id, string Version, string Platform, long FileSize, string? ReleaseNotes, bool IsLatest, DateTime ReleasedAt);
 public record DownloadLinkResponse(string Url, DateTime ExpiresAt);
-public record CreateReleaseRequest(string Version, string Platform, string DownloadUrl, string? FileHash, long FileSize, string? ReleaseNotes, string? MinSubscriptionPlan);
+public record CreateReleaseRequest(string Version, string Platform, string DownloadUrl, string? FileHash, long FileSize, string? ReleaseNotes);
 
 public interface IDownloadAppService
 {
@@ -79,7 +79,6 @@ public class DownloadAppService : IDownloadAppService
             FileHash = request.FileHash,
             FileSize = request.FileSize,
             ReleaseNotes = request.ReleaseNotes,
-            MinSubscriptionPlan = request.MinSubscriptionPlan,
             IsLatest = true
         };
 

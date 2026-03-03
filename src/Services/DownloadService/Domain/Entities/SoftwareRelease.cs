@@ -24,8 +24,5 @@ public class SoftwareRelease : AggregateRoot
     public bool IsLatest { get; set; }
     public bool IsActive { get; set; } = true;
     
-    [MaxLength(20)]
-    public string? MinSubscriptionPlan { get; set; } // null = free, Monthly, Yearly, Lifetime
-    
     public DateTime ReleasedAt { get; set; } = DateTime.UtcNow;
 }
