@@ -1,0 +1,185 @@
+# ============================================================
+# YiPix Unified Multi-Stage Dockerfile
+# ============================================================
+# 所有服务共享一个 build 阶段，避免 12 个并行构建导致服务器 OOM
+#
+# 优势：
+#   - 只执行一次 dotnet restore（共享 NuGet 缓存）
+#   - 顺序 publish 每个项目，峰值内存 ~1.5GB（而非 12GB+）
+#   - BuildKit 自动缓存 build 阶段，第二个服务起几乎瞬间完成
+#
+# 使用方式（在 docker-compose 中）:
+#   build:
+#     context: ..
+#     dockerfile: docker/Dockerfile.unified
+#     target: auth-runtime
+# ============================================================
+
+# ============================================================
+# Stage 1: Build — 编译所有项目
+# ============================================================
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+WORKDIR /src
+
+# 1) 先复制 sln 和所有 .csproj（利用 Docker 层缓存，仅 csproj 变化时才重新 restore）
+COPY YiPix.sln .
+
+# BuildingBlocks
+COPY src/BuildingBlocks/Common/YiPix.BuildingBlocks.Common.csproj src/BuildingBlocks/Common/
+COPY src/BuildingBlocks/Contracts/YiPix.BuildingBlocks.Contracts.csproj src/BuildingBlocks/Contracts/
+COPY src/BuildingBlocks/EventBus/YiPix.BuildingBlocks.EventBus.csproj src/BuildingBlocks/EventBus/
+COPY src/BuildingBlocks/Logging/YiPix.BuildingBlocks.Logging.csproj src/BuildingBlocks/Logging/
+COPY src/BuildingBlocks/Security/YiPix.BuildingBlocks.Security.csproj src/BuildingBlocks/Security/
+
+# Services
+COPY src/Services/AuthService/YiPix.Services.Auth.csproj src/Services/AuthService/
+COPY src/Services/UserService/YiPix.Services.User.csproj src/Services/UserService/
+COPY src/Services/SubscriptionService/YiPix.Services.Subscription.csproj src/Services/SubscriptionService/
+COPY src/Services/PaymentService/YiPix.Services.Payment.csproj src/Services/PaymentService/
+COPY src/Services/DownloadService/YiPix.Services.Download.csproj src/Services/DownloadService/
+COPY src/Services/ProductService/YiPix.Services.Product.csproj src/Services/ProductService/
+COPY src/Services/AnalyticsService/YiPix.Services.Analytics.csproj src/Services/AnalyticsService/
+COPY src/Services/TaskService/YiPix.Services.TaskProcessing.csproj src/Services/TaskService/
+COPY src/Services/FileService/YiPix.Services.FileStorage.csproj src/Services/FileService/
+
+# Workers
+COPY src/Workers/AIWorker/YiPix.Workers.AI.csproj src/Workers/AIWorker/
+COPY src/Workers/WebhookWorker/YiPix.Workers.Webhook.csproj src/Workers/WebhookWorker/
+COPY src/Workers/AnalyticsWorker/YiPix.Workers.Analytics.csproj src/Workers/AnalyticsWorker/
+
+# 2) 全量 restore（一次性，共享 NuGet 包缓存）
+RUN dotnet restore
+
+# 3) 复制全部源码
+COPY src/ src/
+
+# 4) 逐个 publish（顺序执行，每次只有一个 dotnet 进程占用内存）
+RUN dotnet publish src/Services/AuthService/YiPix.Services.Auth.csproj \
+    -c Release -o /app/publish/auth --no-restore
+
+RUN dotnet publish src/Services/UserService/YiPix.Services.User.csproj \
+    -c Release -o /app/publish/user --no-restore
+
+RUN dotnet publish src/Services/SubscriptionService/YiPix.Services.Subscription.csproj \
+    -c Release -o /app/publish/subscription --no-restore
+
+RUN dotnet publish src/Services/PaymentService/YiPix.Services.Payment.csproj \
+    -c Release -o /app/publish/payment --no-restore
+
+RUN dotnet publish src/Services/DownloadService/YiPix.Services.Download.csproj \
+    -c Release -o /app/publish/download --no-restore
+
+RUN dotnet publish src/Services/ProductService/YiPix.Services.Product.csproj \
+    -c Release -o /app/publish/product --no-restore
+
+RUN dotnet publish src/Services/AnalyticsService/YiPix.Services.Analytics.csproj \
+    -c Release -o /app/publish/analytics --no-restore
+
+RUN dotnet publish src/Services/TaskService/YiPix.Services.TaskProcessing.csproj \
+    -c Release -o /app/publish/task --no-restore
+
+RUN dotnet publish src/Services/FileService/YiPix.Services.FileStorage.csproj \
+    -c Release -o /app/publish/file --no-restore
+
+RUN dotnet publish src/Workers/AIWorker/YiPix.Workers.AI.csproj \
+    -c Release -o /app/publish/aiworker --no-restore
+
+RUN dotnet publish src/Workers/WebhookWorker/YiPix.Workers.Webhook.csproj \
+    -c Release -o /app/publish/webhookworker --no-restore
+
+RUN dotnet publish src/Workers/AnalyticsWorker/YiPix.Workers.Analytics.csproj \
+    -c Release -o /app/publish/analyticsworker --no-restore
+
+# ============================================================
+# Stage 2: Runtime images — 每个服务一个轻量运行时镜像
+# ============================================================
+
+# --- AuthService ---
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS auth-runtime
+WORKDIR /app
+EXPOSE 8080
+ENV ASPNETCORE_URLS=http://+:8080
+COPY --from=build /app/publish/auth .
+ENTRYPOINT ["dotnet", "YiPix.Services.Auth.dll"]
+
+# --- UserService ---
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS user-runtime
+WORKDIR /app
+EXPOSE 8080
+ENV ASPNETCORE_URLS=http://+:8080
+COPY --from=build /app/publish/user .
+ENTRYPOINT ["dotnet", "YiPix.Services.User.dll"]
+
+# --- SubscriptionService ---
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS subscription-runtime
+WORKDIR /app
+EXPOSE 8080
+ENV ASPNETCORE_URLS=http://+:8080
+COPY --from=build /app/publish/subscription .
+ENTRYPOINT ["dotnet", "YiPix.Services.Subscription.dll"]
+
+# --- PaymentService ---
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS payment-runtime
+WORKDIR /app
+EXPOSE 8080
+ENV ASPNETCORE_URLS=http://+:8080
+COPY --from=build /app/publish/payment .
+ENTRYPOINT ["dotnet", "YiPix.Services.Payment.dll"]
+
+# --- DownloadService ---
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS download-runtime
+WORKDIR /app
+EXPOSE 8080
+ENV ASPNETCORE_URLS=http://+:8080
+COPY --from=build /app/publish/download .
+ENTRYPOINT ["dotnet", "YiPix.Services.Download.dll"]
+
+# --- ProductService ---
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS product-runtime
+WORKDIR /app
+EXPOSE 8080
+ENV ASPNETCORE_URLS=http://+:8080
+COPY --from=build /app/publish/product .
+ENTRYPOINT ["dotnet", "YiPix.Services.Product.dll"]
+
+# --- AnalyticsService ---
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS analytics-runtime
+WORKDIR /app
+EXPOSE 8080
+ENV ASPNETCORE_URLS=http://+:8080
+COPY --from=build /app/publish/analytics .
+ENTRYPOINT ["dotnet", "YiPix.Services.Analytics.dll"]
+
+# --- TaskService ---
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS task-runtime
+WORKDIR /app
+EXPOSE 8080
+ENV ASPNETCORE_URLS=http://+:8080
+COPY --from=build /app/publish/task .
+ENTRYPOINT ["dotnet", "YiPix.Services.TaskProcessing.dll"]
+
+# --- FileService ---
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS file-runtime
+WORKDIR /app
+EXPOSE 8080
+ENV ASPNETCORE_URLS=http://+:8080
+COPY --from=build /app/publish/file .
+ENTRYPOINT ["dotnet", "YiPix.Services.FileStorage.dll"]
+
+# --- AIWorker ---
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS aiworker-runtime
+WORKDIR /app
+COPY --from=build /app/publish/aiworker .
+ENTRYPOINT ["dotnet", "YiPix.Workers.AI.dll"]
+
+# --- WebhookWorker ---
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS webhookworker-runtime
+WORKDIR /app
+COPY --from=build /app/publish/webhookworker .
+ENTRYPOINT ["dotnet", "YiPix.Workers.Webhook.dll"]
+
+# --- AnalyticsWorker ---
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS analyticsworker-runtime
+WORKDIR /app
+COPY --from=build /app/publish/analyticsworker .
+ENTRYPOINT ["dotnet", "YiPix.Workers.Analytics.dll"]

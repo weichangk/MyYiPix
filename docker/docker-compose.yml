@@ -1,3 +1,13 @@
+# ============================================================
+# YiPix Development Full-Stack Deployment
+# ============================================================
+# 使用统一多阶段 Dockerfile，所有服务共享一次 dotnet restore
+# 避免 12 个并行构建导致服务器 OOM
+#
+# 使用方式:
+#   docker compose -f docker-compose.yml up --build -d
+# ============================================================
+
 services:
   # ============================================================
   # Infrastructure
@@ -18,6 +28,10 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 512M
 
   redis:
     image: redis:7-alpine
@@ -31,6 +45,10 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 256M
 
   rabbitmq:
     image: rabbitmq:3-management-alpine
@@ -48,14 +66,19 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 512M
 
   # ============================================================
-  # API Services
+  # API Services (统一使用 Dockerfile.unified + target)
   # ============================================================
   auth-service:
     build:
       context: ..
-      dockerfile: docker/Dockerfile.auth
+      dockerfile: docker/Dockerfile.unified
+      target: auth-runtime
     container_name: yipix-auth
     ports:
       - "5001:8080"
@@ -72,11 +95,16 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 256M
 
   user-service:
     build:
       context: ..
-      dockerfile: docker/Dockerfile.user
+      dockerfile: docker/Dockerfile.unified
+      target: user-runtime
     container_name: yipix-user
     ports:
       - "5002:8080"
@@ -93,11 +121,16 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 256M
 
   subscription-service:
     build:
       context: ..
-      dockerfile: docker/Dockerfile.subscription
+      dockerfile: docker/Dockerfile.unified
+      target: subscription-runtime
     container_name: yipix-subscription
     ports:
       - "5003:8080"
@@ -114,11 +147,16 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 256M
 
   payment-service:
     build:
       context: ..
-      dockerfile: docker/Dockerfile.payment
+      dockerfile: docker/Dockerfile.unified
+      target: payment-runtime
     container_name: yipix-payment
     ports:
       - "5004:8080"
@@ -135,11 +173,16 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 256M
 
   download-service:
     build:
       context: ..
-      dockerfile: docker/Dockerfile.download
+      dockerfile: docker/Dockerfile.unified
+      target: download-runtime
     container_name: yipix-download
     ports:
       - "5005:8080"
@@ -156,11 +199,16 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 256M
 
   product-service:
     build:
       context: ..
-      dockerfile: docker/Dockerfile.product
+      dockerfile: docker/Dockerfile.unified
+      target: product-runtime
     container_name: yipix-product
     ports:
       - "5006:8080"
@@ -173,11 +221,16 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 256M
 
   analytics-service:
     build:
       context: ..
-      dockerfile: docker/Dockerfile.analytics
+      dockerfile: docker/Dockerfile.unified
+      target: analytics-runtime
     container_name: yipix-analytics
     ports:
       - "5007:8080"
@@ -190,11 +243,16 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 256M
 
   task-service:
     build:
       context: ..
-      dockerfile: docker/Dockerfile.task
+      dockerfile: docker/Dockerfile.unified
+      target: task-runtime
     container_name: yipix-task
     ports:
       - "5008:8080"
@@ -211,11 +269,16 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 256M
 
   file-service:
     build:
       context: ..
-      dockerfile: docker/Dockerfile.file
+      dockerfile: docker/Dockerfile.unified
+      target: file-runtime
     container_name: yipix-file
     ports:
       - "5009:8080"
@@ -230,6 +293,10 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 256M
 
   # ============================================================
   # Workers
@@ -237,35 +304,50 @@ services:
   ai-worker:
     build:
       context: ..
-      dockerfile: docker/Dockerfile.aiworker
+      dockerfile: docker/Dockerfile.unified
+      target: aiworker-runtime
     container_name: yipix-ai-worker
     environment:
       - ConnectionStrings__RabbitMQ=amqp://guest:guest@rabbitmq:5672
     depends_on:
       rabbitmq:
         condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 256M
 
   webhook-worker:
     build:
       context: ..
-      dockerfile: docker/Dockerfile.webhookworker
+      dockerfile: docker/Dockerfile.unified
+      target: webhookworker-runtime
     container_name: yipix-webhook-worker
     environment:
       - ConnectionStrings__RabbitMQ=amqp://guest:guest@rabbitmq:5672
     depends_on:
       rabbitmq:
         condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 256M
 
   analytics-worker:
     build:
       context: ..
-      dockerfile: docker/Dockerfile.analyticsworker
+      dockerfile: docker/Dockerfile.unified
+      target: analyticsworker-runtime
     container_name: yipix-analytics-worker
     environment:
       - ConnectionStrings__RabbitMQ=amqp://guest:guest@rabbitmq:5672
     depends_on:
       rabbitmq:
         condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 256M
 
 volumes:
   postgres_data:
