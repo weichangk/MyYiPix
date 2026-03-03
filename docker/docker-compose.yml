@@ -4,8 +4,15 @@
 # 使用统一多阶段 Dockerfile，所有服务共享一次 dotnet restore
 # 避免 12 个并行构建导致服务器 OOM
 #
+# 内存规划 (适配 2GB 服务器 + Swap):
+#   基础设施: PostgreSQL 256M + Redis 64M + RabbitMQ 256M = 576M
+#   微服务 x9: 9 × 128M = 1152M
+#   Worker x3: 3 × 96M = 288M
+#   总计: ~2.0GB
+#
 # 使用方式:
 #   docker compose -f docker-compose.yml up --build -d
+#   或: ./deploy.sh dev (推荐，分批启动)
 # ============================================================
 
 services:
@@ -31,7 +38,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 512M
+          memory: 256M
 
   redis:
     image: redis:7-alpine
@@ -48,7 +55,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 256M
+          memory: 64M
 
   rabbitmq:
     image: rabbitmq:3-management-alpine
@@ -69,7 +76,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 512M
+          memory: 256M
 
   # ============================================================
   # API Services (统一使用 Dockerfile.unified + target)
@@ -98,7 +105,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 256M
+          memory: 128M
 
   user-service:
     build:
@@ -124,7 +131,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 256M
+          memory: 128M
 
   subscription-service:
     build:
@@ -150,7 +157,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 256M
+          memory: 128M
 
   payment-service:
     build:
@@ -176,7 +183,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 256M
+          memory: 128M
 
   download-service:
     build:
@@ -202,7 +209,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 256M
+          memory: 128M
 
   product-service:
     build:
@@ -224,7 +231,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 256M
+          memory: 128M
 
   analytics-service:
     build:
@@ -246,7 +253,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 256M
+          memory: 128M
 
   task-service:
     build:
@@ -272,7 +279,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 256M
+          memory: 128M
 
   file-service:
     build:
@@ -296,7 +303,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 256M
+          memory: 128M
 
   # ============================================================
   # Workers
@@ -315,7 +322,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 256M
+          memory: 96M
 
   webhook-worker:
     build:
@@ -331,7 +338,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 256M
+          memory: 96M
 
   analytics-worker:
     build:
@@ -347,7 +354,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 256M
+          memory: 96M
 
 volumes:
   postgres_data:
