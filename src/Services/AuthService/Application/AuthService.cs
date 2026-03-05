@@ -38,6 +38,11 @@ public class AuthService : IAuthService
 
     public async Task<AuthResponse> RegisterAsync(RegisterRequest request, CancellationToken ct = default)
     {
+        // 验证邮箱有效性（格式 + 一次性邮箱过滤 + DNS MX 记录）
+        var (isValid, errorMessage) = await EmailValidator.ValidateAsync(request.Email);
+        if (!isValid)
+            throw new YiPixException(errorMessage!);
+
         var existing = await _repository.GetByEmailAsync(request.Email, ct);
         if (existing != null)
             throw new ConflictException("A user with this email already exists.");
