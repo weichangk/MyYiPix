@@ -212,6 +212,9 @@ services:
       - JwtSettings__Secret=${JWT_SECRET}
       - JwtSettings__Issuer=${JWT_ISSUER}
       - JwtSettings__Audience=${JWT_AUDIENCE}
+      - CdnSettings__BaseUrl=${CDN_BASE_URL}
+      - CdnSettings__AuthKey=${CDN_AUTH_KEY}
+      - CdnSettings__LinkExpirationMinutes=${CDN_LINK_EXPIRATION_MINUTES:-60}
     depends_on:
       postgres:
         condition: service_healthy

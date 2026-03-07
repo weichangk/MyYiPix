@@ -2,6 +2,7 @@ using YiPix.BuildingBlocks.Common.Exceptions;
 using YiPix.BuildingBlocks.Contracts.Events;
 using YiPix.BuildingBlocks.EventBus.Abstractions;
 using YiPix.Services.Download.Domain.Entities;
+using YiPix.Services.Download.Infrastructure.Cdn;
 using YiPix.Services.Download.Infrastructure.Data;
 
 namespace YiPix.Services.Download.Application;
@@ -23,11 +24,16 @@ public class DownloadAppService : IDownloadAppService
 {
     private readonly IDownloadRepository _repository;
     private readonly IEventBus _eventBus;
+    private readonly ICdnSignService _cdnSignService;
 
-    public DownloadAppService(IDownloadRepository repository, IEventBus eventBus)
+    public DownloadAppService(
+        IDownloadRepository repository,
+        IEventBus eventBus,
+        ICdnSignService cdnSignService)
     {
         _repository = repository;
         _eventBus = eventBus;
+        _cdnSignService = cdnSignService;
     }
 
     public async Task<ReleaseDto?> GetLatestReleaseAsync(string platform, CancellationToken ct = default)
@@ -64,9 +70,9 @@ public class DownloadAppService : IDownloadAppService
                 new DownloadStartedEvent(userId.Value, version, platform), ct);
         }
 
-        // TODO: Generate CDN signed URL
-        var signedUrl = $"{release.DownloadUrl}?token={Guid.NewGuid()}&expires={DateTime.UtcNow.AddHours(1).Ticks}";
-        return new DownloadLinkResponse(signedUrl, DateTime.UtcNow.AddHours(1));
+        // CDN 签名
+        var signed = _cdnSignService.GenerateSignedUrl(release.DownloadUrl);
+        return new DownloadLinkResponse(signed.Url, signed.ExpiresAt);
     }
 
     public async Task<ReleaseDto> CreateReleaseAsync(CreateReleaseRequest request, CancellationToken ct = default)

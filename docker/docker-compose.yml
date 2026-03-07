@@ -201,6 +201,9 @@ services:
       - JwtSettings__Secret=YiPix-Super-Secret-Key-Must-Be-At-Least-32-Characters-Long!
       - JwtSettings__Issuer=YiPix
       - JwtSettings__Audience=YiPixClients
+      - CdnSettings__BaseUrl=https://cdn.yipix.com
+      - CdnSettings__AuthKey=your-cdn-auth-secret-key
+      - CdnSettings__LinkExpirationMinutes=60
     depends_on:
       postgres:
         condition: service_healthy

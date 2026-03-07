@@ -5,6 +5,7 @@ using YiPix.BuildingBlocks.Logging;
 using YiPix.BuildingBlocks.Security;
 using Scalar.AspNetCore;
 using YiPix.Services.Download.Application;
+using YiPix.Services.Download.Infrastructure.Cdn;
 using YiPix.Services.Download.Infrastructure.Data;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -16,6 +17,10 @@ builder.Services.AddDbContext<DownloadDbContext>(options =>
 
 builder.Services.AddScoped<IDownloadRepository, DownloadRepository>();
 builder.Services.AddScoped<IDownloadAppService, DownloadAppService>();
+
+// 添加 CDN 签名服务
+builder.Services.Configure<CdnSettings>(builder.Configuration.GetSection("CdnSettings"));
+builder.Services.AddSingleton<ICdnSignService, AliyunCdnSignService>();
 
 builder.Services.AddYiPixJwtAuth(builder.Configuration);
 builder.Services.AddRabbitMQEventBus(
