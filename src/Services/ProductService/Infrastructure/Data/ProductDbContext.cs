@@ -3,6 +3,10 @@ using YiPix.Services.Product.Domain.Entities;
 
 namespace YiPix.Services.Product.Infrastructure.Data;
 
+/// <summary>
+/// Product 数据库上下文 - 使用 "product" schema 隔离
+/// 包含 Products 和 PricingPlans 两张表，Slug 唯一索引
+/// </summary>
 public class ProductDbContext : DbContext
 {
     public ProductDbContext(DbContextOptions<ProductDbContext> options) : base(options) { }

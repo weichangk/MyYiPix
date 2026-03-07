@@ -3,6 +3,10 @@ using YiPix.Services.Analytics.Domain.Entities;
 
 namespace YiPix.Services.Analytics.Infrastructure.Data;
 
+/// <summary>
+/// Analytics 数据库上下文 - 使用 "analytics" schema 隔离
+/// 包含 Events 和 DailyStats 两张表
+/// </summary>
 public class AnalyticsDbContext : DbContext
 {
     public AnalyticsDbContext(DbContextOptions<AnalyticsDbContext> options) : base(options) { }

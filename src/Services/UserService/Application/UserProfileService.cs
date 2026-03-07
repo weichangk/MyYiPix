@@ -4,7 +4,8 @@ using YiPix.Services.User.Infrastructure.Data;
 
 namespace YiPix.Services.User.Application;
 
-// DTOs
+// ========== DTOs ==========
+/// <summary>用户资料响应 DTO</summary>
 public record UserProfileDto(
     Guid Id,
     Guid UserId,
@@ -18,6 +19,7 @@ public record UserProfileDto(
     DateTime CreatedAt,
     DateTime? UpdatedAt);
 
+/// <summary>更新资料请求 DTO，字段为 null 表示不修改</summary>
 public record UpdateProfileRequest(
     string? DisplayName,
     string? AvatarUrl,
@@ -25,7 +27,8 @@ public record UpdateProfileRequest(
     string? Language,
     string? Bio);
 
-// Interface
+// ========== 服务接口 ==========
+/// <summary>用户资料服务接口</summary>
 public interface IUserProfileService
 {
     Task<UserProfileDto> GetProfileAsync(Guid userId);
@@ -34,7 +37,8 @@ public interface IUserProfileService
     Task<List<UserActivity>> GetUserActivitiesAsync(Guid userId, int page = 1, int pageSize = 20);
 }
 
-// Implementation
+// ========== 服务实现 ==========
+/// <summary>用户资料服务实现</summary>
 public class UserProfileService : IUserProfileService
 {
     private readonly IUserRepository _repository;

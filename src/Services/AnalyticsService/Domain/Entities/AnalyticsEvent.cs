@@ -3,6 +3,10 @@ using YiPix.BuildingBlocks.Common.Domain;
 
 namespace YiPix.Services.Analytics.Domain.Entities;
 
+/// <summary>
+/// 埋点事件实体 - 记录用户行为事件（下载、注册、支付等）
+/// EventData 字段存储 JSON 格式的事件负载
+/// </summary>
 public class AnalyticsEvent : BaseEntity
 {
     public Guid? UserId { get; set; }

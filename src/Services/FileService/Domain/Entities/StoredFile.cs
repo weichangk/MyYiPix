@@ -3,6 +3,11 @@ using YiPix.BuildingBlocks.Common.Domain;
 
 namespace YiPix.Services.FileStorage.Domain.Entities;
 
+/// <summary>
+/// 存储文件实体 - 记录文件元数据和存储位置
+/// Category: Avatar/TaskInput/TaskOutput/Release
+/// StorageProvider: Local/S3/AzureBlob/MinIO
+/// </summary>
 public class StoredFile : BaseEntity
 {
     public Guid? UserId { get; set; }

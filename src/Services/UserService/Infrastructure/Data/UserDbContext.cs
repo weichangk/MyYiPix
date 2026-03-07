@@ -3,6 +3,10 @@ using YiPix.Services.User.Domain.Entities;
 
 namespace YiPix.Services.User.Infrastructure.Data;
 
+/// <summary>
+/// User 数据库上下文 - 使用 "user" schema 隔离
+/// 包含 UserProfiles 和 UserActivities 两张表
+/// </summary>
 public class UserDbContext : DbContext
 {
     public UserDbContext(DbContextOptions<UserDbContext> options) : base(options) { }

@@ -3,6 +3,10 @@ using YiPix.BuildingBlocks.Common.Domain;
 
 namespace YiPix.Services.Product.Domain.Entities;
 
+/// <summary>
+/// 产品实体（聚合根）- 包含产品基本信息和关联的定价方案列表
+/// Features 字段存储 JSON 格式的功能列表
+/// </summary>
 public class Product : AggregateRoot
 {
     [MaxLength(100)]

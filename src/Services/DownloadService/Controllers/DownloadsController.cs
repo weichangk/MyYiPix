@@ -5,6 +5,9 @@ using YiPix.Services.Download.Application;
 
 namespace YiPix.Services.Download.Controllers;
 
+/// <summary>
+/// 下载控制器 - 管理软件版本发布和 CDN 签名下载链接生成
+/// </summary>
 [ApiController]
 [Route("api/[controller]")]
 public class DownloadsController : ControllerBase
@@ -13,6 +16,7 @@ public class DownloadsController : ControllerBase
 
     public DownloadsController(IDownloadAppService service) => _service = service;
 
+    /// <summary>获取指定平台的最新版本信息</summary>
     [HttpGet("latest/{platform}")]
     public async Task<ActionResult<ApiResponse<ReleaseDto>>> GetLatest(string platform, CancellationToken ct)
     {
@@ -21,6 +25,7 @@ public class DownloadsController : ControllerBase
         return Ok(ApiResponse<ReleaseDto>.Ok(result));
     }
 
+    /// <summary>获取所有已发布版本列表</summary>
     [HttpGet("releases")]
     public async Task<ActionResult<ApiResponse<List<ReleaseDto>>>> GetAll(CancellationToken ct)
     {
@@ -28,6 +33,7 @@ public class DownloadsController : ControllerBase
         return Ok(ApiResponse<List<ReleaseDto>>.Ok(result));
     }
 
+    /// <summary>生成带 CDN 签名的下载链接（记录下载行为）</summary>
     [HttpGet("link/{version}/{platform}")]
     public async Task<ActionResult<ApiResponse<DownloadLinkResponse>>> GetLink(
         string version, string platform, CancellationToken ct)
@@ -39,6 +45,7 @@ public class DownloadsController : ControllerBase
         return Ok(ApiResponse<DownloadLinkResponse>.Ok(result));
     }
 
+    /// <summary>发布新版本（仅管理员，自动将旧版本标记为非最新）</summary>
     [HttpPost("releases")]
     [Authorize(Roles = "Admin")]
     public async Task<ActionResult<ApiResponse<ReleaseDto>>> CreateRelease(

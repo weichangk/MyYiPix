@@ -3,6 +3,10 @@ using YiPix.Services.TaskProcessing.Domain.Entities;
 
 namespace YiPix.Services.TaskProcessing.Infrastructure.Data;
 
+/// <summary>
+/// Task 数据库上下文 - 使用 "task" schema 隔离
+/// 包含 Tasks 表，按 UserId 和 Status 建索引
+/// </summary>
 public class TaskDbContext : DbContext
 {
     public TaskDbContext(DbContextOptions<TaskDbContext> options) : base(options) { }

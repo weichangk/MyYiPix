@@ -6,9 +6,13 @@ using YiPix.Services.TaskProcessing.Infrastructure.Data;
 
 namespace YiPix.Services.TaskProcessing.Application;
 
+// ========== DTOs ==========
 public record TaskDto(Guid Id, Guid UserId, string TaskType, string Status, int? Progress, string? InputFileUrl, string? OutputFileUrl, DateTime CreatedAt, DateTime? CompletedAt, string? ErrorMessage);
 public record CreateTaskRequest(Guid UserId, string TaskType, string? InputFileUrl, string? Parameters);
 
+/// <summary>
+/// 任务服务接口 - 任务创建、状态更新、取消
+/// </summary>
 public interface ITaskAppService
 {
     Task<TaskDto> CreateTaskAsync(CreateTaskRequest request, CancellationToken ct = default);
@@ -18,6 +22,10 @@ public interface ITaskAppService
     Task<TaskDto> CancelTaskAsync(Guid id, CancellationToken ct = default);
 }
 
+/// <summary>
+/// 任务服务实现：创建任务后发布 TaskCreatedEvent，AIWorker 消费处理
+/// 状态流转：Pending → Processing → Completed/Failed/Cancelled
+/// </summary>
 public class TaskAppService : ITaskAppService
 {
     private readonly ITaskRepository _repository;

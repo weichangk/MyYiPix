@@ -3,6 +3,10 @@ using YiPix.BuildingBlocks.Common.Domain;
 
 namespace YiPix.Services.Product.Domain.Entities;
 
+/// <summary>
+/// 定价方案实体 - 支持 Monthly/Yearly/OneTime 计费周期
+/// PayPalPlanId 用于关联 PayPal 订阅计划
+/// </summary>
 public class PricingPlan : BaseEntity
 {
     public Guid ProductId { get; set; }

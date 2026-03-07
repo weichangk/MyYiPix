@@ -3,11 +3,16 @@ using YiPix.Services.Analytics.Infrastructure.Data;
 
 namespace YiPix.Services.Analytics.Application;
 
+// ========== DTOs ==========
 public record TrackEventRequest(string EventType, string? EventCategory, string? EventData, string? Source, Guid? UserId);
 public record EventCountResponse(string EventType, long Count, DateTime? From, DateTime? To);
 public record DailyStatsDto(DateOnly Date, string MetricName, long Value, string? Dimension);
+/// <summary>Dashboard 汇总数据</summary>
 public record DashboardSummary(long TotalDownloads, long TotalUsers, long TotalPayments, long ActiveSubscriptions);
 
+/// <summary>
+/// 统计分析服务接口 - 事件埋点、计数查询、每日指标、Dashboard
+/// </summary>
 public interface IAnalyticsAppService
 {
     Task TrackEventAsync(TrackEventRequest request, string? ipAddress, string? userAgent, CancellationToken ct = default);

@@ -5,6 +5,10 @@ using YiPix.Services.FileStorage.Application;
 
 namespace YiPix.Services.FileStorage.Controllers;
 
+/// <summary>
+/// 文件控制器 - 文件上传、下载、查询和删除
+/// 所有接口需要 JWT 认证
+/// </summary>
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]

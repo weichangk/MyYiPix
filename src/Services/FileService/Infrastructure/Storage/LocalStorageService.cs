@@ -1,5 +1,8 @@
 namespace YiPix.Services.FileStorage.Infrastructure.Storage;
 
+/// <summary>
+/// 本地文件存储实现 - 开发环境使用，生产环境应替换为 MinIO/S3 实现
+/// </summary>
 public class LocalStorageService : IStorageService
 {
     private readonly string _basePath;

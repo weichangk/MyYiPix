@@ -4,6 +4,9 @@ using YiPix.Services.User.Domain.Entities;
 
 namespace YiPix.Services.User.Infrastructure.Data;
 
+/// <summary>
+/// 用户仓储接口 - 用户资料 CRUD、搜索、行为日志
+/// </summary>
 public interface IUserRepository
 {
     Task<UserProfile?> GetByIdAsync(Guid id);

@@ -9,6 +9,9 @@ using BCrypt.Net;
 
 namespace YiPix.Services.Auth.Application;
 
+/// <summary>
+/// 认证服务接口 - 注册、登录、Token 管理
+/// </summary>
 public interface IAuthService
 {
     Task<AuthResponse> RegisterAsync(RegisterRequest request, CancellationToken ct = default);
@@ -17,6 +20,9 @@ public interface IAuthService
     Task RevokeTokenAsync(string refreshToken, CancellationToken ct = default);
 }
 
+/// <summary>
+/// 认证服务实现：密码使用 BCrypt 哈希，JWT + Refresh Token 双 Token 机制
+/// </summary>
 public class AuthService : IAuthService
 {
     private readonly IAuthRepository _repository;
@@ -36,6 +42,7 @@ public class AuthService : IAuthService
         _eventBus = eventBus;
     }
 
+    /// <summary>用户注册：验证邮箱 → 创建用户 → 签发 Token → 发布 UserCreatedEvent</summary>
     public async Task<AuthResponse> RegisterAsync(RegisterRequest request, CancellationToken ct = default)
     {
         // 验证邮箱有效性（格式 + 一次性邮箱过滤 + DNS MX 记录）
@@ -76,6 +83,7 @@ public class AuthService : IAuthService
         );
     }
 
+    /// <summary>用户登录：验证密码 → 更新登录时间 → 签发 Token → 发布 UserLoggedInEvent</summary>
     public async Task<AuthResponse> LoginAsync(LoginRequest request, string? ipAddress = null, CancellationToken ct = default)
     {
         var user = await _repository.GetByEmailAsync(request.Email, ct)
@@ -112,6 +120,7 @@ public class AuthService : IAuthService
         );
     }
 
+    /// <summary>刷新 Token：撤销旧 Refresh Token，签发新的 Token 对（旋转刷新策略）</summary>
     public async Task<AuthResponse> RefreshTokenAsync(RefreshTokenRequest request, CancellationToken ct = default)
     {
         var storedToken = await _repository.GetRefreshTokenAsync(request.RefreshToken, ct)

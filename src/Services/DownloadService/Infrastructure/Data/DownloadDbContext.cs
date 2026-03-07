@@ -3,6 +3,10 @@ using YiPix.Services.Download.Domain.Entities;
 
 namespace YiPix.Services.Download.Infrastructure.Data;
 
+/// <summary>
+/// Download 数据库上下文 - 使用 "download" schema 隔离
+/// 包含 Releases 和 DownloadRecords 两张表，Version+Platform 联合唯一索引
+/// </summary>
 public class DownloadDbContext : DbContext
 {
     public DownloadDbContext(DbContextOptions<DownloadDbContext> options) : base(options) { }

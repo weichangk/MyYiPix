@@ -41,20 +41,24 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+// 全局异常处理中间件
 app.UseMiddleware<GlobalExceptionMiddleware>();
 
+// 开发环境启用 OpenAPI 文档和 Scalar UI
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
     app.MapScalarApiReference();
 }
 
+// HTTP 请求管道
 app.UseHttpsRedirection();
 app.UseCors("AllowAll");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
+// 开发环境自动执行数据库迁移
 // Auto-migrate in development
 if (app.Environment.IsDevelopment())
 {

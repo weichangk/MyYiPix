@@ -3,6 +3,10 @@ using YiPix.Services.FileStorage.Domain.Entities;
 
 namespace YiPix.Services.FileStorage.Infrastructure.Data;
 
+/// <summary>
+/// File 数据库上下文 - 使用 "file" schema 隔离
+/// 包含 Files 表，按 UserId 和 StoragePath 建索引
+/// </summary>
 public class FileDbContext : DbContext
 {
     public FileDbContext(DbContextOptions<FileDbContext> options) : base(options) { }

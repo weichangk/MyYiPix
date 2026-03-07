@@ -5,9 +5,13 @@ using YiPix.Services.FileStorage.Infrastructure.Storage;
 
 namespace YiPix.Services.FileStorage.Application;
 
+// ========== DTOs ==========
 public record FileDto(Guid Id, string FileName, string ContentType, long FileSize, string? Category, bool IsPublic, DateTime CreatedAt);
 public record UploadResult(Guid Id, string FileName, long FileSize, string Url);
 
+/// <summary>
+/// 文件服务接口 - 文件上传、下载、查询、删除
+/// </summary>
 public interface IFileAppService
 {
     Task<UploadResult> UploadAsync(Stream stream, string fileName, string contentType, long fileSize, Guid? userId, string? category, bool isPublic, CancellationToken ct = default);
@@ -16,6 +20,9 @@ public interface IFileAppService
     Task DeleteAsync(Guid id, CancellationToken ct = default);
 }
 
+/// <summary>
+/// 文件服务实现：通过 IStorageService 抽象存储后端（本地/MinIO/S3）
+/// </summary>
 public class FileAppService : IFileAppService
 {
     private readonly IFileRepository _repository;

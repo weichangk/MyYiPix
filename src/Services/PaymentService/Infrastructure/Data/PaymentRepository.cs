@@ -3,6 +3,9 @@ using YiPix.Services.Payment.Domain.Entities;
 
 namespace YiPix.Services.Payment.Infrastructure.Data;
 
+/// <summary>
+/// 支付仓储接口 - 支付订单 CRUD、Webhook 日志、幂等性检查
+/// </summary>
 public interface IPaymentRepository
 {
     Task<Domain.Entities.Payment?> GetByIdAsync(Guid id, CancellationToken ct = default);

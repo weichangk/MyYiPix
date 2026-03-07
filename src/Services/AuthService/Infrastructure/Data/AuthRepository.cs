@@ -3,6 +3,9 @@ using YiPix.Services.Auth.Domain.Entities;
 
 namespace YiPix.Services.Auth.Infrastructure.Data;
 
+/// <summary>
+/// 认证仓储接口 - 用户 CRUD + Refresh Token 管理
+/// </summary>
 public interface IAuthRepository
 {
     Task<User?> GetByEmailAsync(string email, CancellationToken ct = default);

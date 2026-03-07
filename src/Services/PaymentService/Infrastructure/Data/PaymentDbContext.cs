@@ -3,6 +3,10 @@ using YiPix.Services.Payment.Domain.Entities;
 
 namespace YiPix.Services.Payment.Infrastructure.Data;
 
+/// <summary>
+/// Payment 数据库上下文 - 使用 "payment" schema 隔离
+/// 包含 Payments 和 WebhookLogs 两张表
+/// </summary>
 public class PaymentDbContext : DbContext
 {
     public PaymentDbContext(DbContextOptions<PaymentDbContext> options) : base(options) { }

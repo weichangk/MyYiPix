@@ -3,6 +3,10 @@ using YiPix.BuildingBlocks.Common.Domain;
 
 namespace YiPix.Services.Download.Domain.Entities;
 
+/// <summary>
+/// 软件版本发布实体（聚合根）
+/// DownloadUrl 存储 CDN 资源路径（如 /releases/v1.0.0/setup.exe），签名服务会自动拼接域名和签名参数
+/// </summary>
 public class SoftwareRelease : AggregateRoot
 {
     [MaxLength(50)]

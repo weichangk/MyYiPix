@@ -6,6 +6,9 @@ using YiPix.Services.Payment.Application;
 
 namespace YiPix.Services.Payment.Controllers;
 
+/// <summary>
+/// 支付控制器 - 管理支付订单和处理 PayPal Webhook
+/// </summary>
 [ApiController]
 [Route("api/[controller]")]
 public class PaymentsController : ControllerBase
@@ -49,11 +52,12 @@ public class PaymentsController : ControllerBase
         return Ok(ApiResponse<PaymentDto>.Ok(result));
     }
 
+    /// <summary>PayPal Webhook 回调入口（无需认证）</summary>
     [HttpPost("webhook")]
     [AllowAnonymous]
     public async Task<IActionResult> Webhook(CancellationToken ct)
     {
-        // TODO: Verify PayPal webhook signature
+        // TODO: 验证 PayPal Webhook 签名
         using var reader = new StreamReader(Request.Body);
         var payload = await reader.ReadToEndAsync(ct);
 

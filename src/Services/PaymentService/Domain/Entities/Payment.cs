@@ -3,6 +3,10 @@ using YiPix.BuildingBlocks.Common.Domain;
 
 namespace YiPix.Services.Payment.Domain.Entities;
 
+/// <summary>
+/// 支付订单实体（聚合根）- 支持订阅付费和一次性付费
+/// 状态流转：Pending → Completed/Failed/Refunded
+/// </summary>
 public class Payment : AggregateRoot
 {
     public Guid UserId { get; set; }

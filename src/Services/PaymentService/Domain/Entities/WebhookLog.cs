@@ -2,6 +2,9 @@ using YiPix.BuildingBlocks.Common.Domain;
 
 namespace YiPix.Services.Payment.Domain.Entities;
 
+/// <summary>
+/// Webhook 日志实体 - 记录每次 PayPal 回调，用于幂等性检查和问题追溯
+/// </summary>
 public class WebhookLog : BaseEntity
 {
     public string EventType { get; set; } = string.Empty;

@@ -3,6 +3,9 @@ using YiPix.Services.TaskProcessing.Domain.Entities;
 
 namespace YiPix.Services.TaskProcessing.Infrastructure.Data;
 
+/// <summary>
+/// 任务仓储接口 - 任务 CRUD、按用户查询、获取待处理任务
+/// </summary>
 public interface ITaskRepository
 {
     Task<ProcessingTask?> GetByIdAsync(Guid id, CancellationToken ct = default);

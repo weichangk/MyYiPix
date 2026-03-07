@@ -7,10 +7,15 @@ using YiPix.Services.Download.Infrastructure.Data;
 
 namespace YiPix.Services.Download.Application;
 
+// ========== DTOs ==========
 public record ReleaseDto(Guid Id, string Version, string Platform, long FileSize, string? ReleaseNotes, bool IsLatest, DateTime ReleasedAt);
+/// <summary>CDN 签名下载链接响应</summary>
 public record DownloadLinkResponse(string Url, DateTime ExpiresAt);
 public record CreateReleaseRequest(string Version, string Platform, string DownloadUrl, string? FileHash, long FileSize, string? ReleaseNotes);
 
+/// <summary>
+/// 下载服务接口 - 版本管理、CDN 签名链接生成、下载统计
+/// </summary>
 public interface IDownloadAppService
 {
     Task<ReleaseDto?> GetLatestReleaseAsync(string platform, CancellationToken ct = default);
@@ -20,6 +25,9 @@ public interface IDownloadAppService
     Task<long> GetDownloadCountAsync(CancellationToken ct = default);
 }
 
+/// <summary>
+/// 下载服务实现：通过 ICdnSignService 生成带鉴权签名的下载 URL
+/// </summary>
 public class DownloadAppService : IDownloadAppService
 {
     private readonly IDownloadRepository _repository;

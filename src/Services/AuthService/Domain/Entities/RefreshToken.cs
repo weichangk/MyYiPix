@@ -2,6 +2,9 @@ using YiPix.BuildingBlocks.Common.Domain;
 
 namespace YiPix.Services.Auth.Domain.Entities;
 
+/// <summary>
+/// 刷新令牌实体 - 支持多设备登录，每次刷新后旧 Token 自动撤销
+/// </summary>
 public class RefreshToken : BaseEntity
 {
     public Guid UserId { get; set; }

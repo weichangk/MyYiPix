@@ -3,6 +3,9 @@ using YiPix.Services.Analytics.Domain.Entities;
 
 namespace YiPix.Services.Analytics.Infrastructure.Data;
 
+/// <summary>
+/// 统计分析仓储接口 - 事件写入、计数查询、每日指标 Upsert
+/// </summary>
 public interface IAnalyticsRepository
 {
     Task TrackEventAsync(AnalyticsEvent evt, CancellationToken ct = default);

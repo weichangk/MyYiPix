@@ -3,6 +3,10 @@ using YiPix.Services.Subscription.Domain.Entities;
 
 namespace YiPix.Services.Subscription.Infrastructure.Data;
 
+/// <summary>
+/// Subscription 数据库上下文 - 使用 "subscription" schema 隔离
+/// 包含 Subscriptions 和 SubscriptionHistories 两张表
+/// </summary>
 public class SubscriptionDbContext : DbContext
 {
     public SubscriptionDbContext(DbContextOptions<SubscriptionDbContext> options) : base(options) { }

@@ -3,6 +3,10 @@ using YiPix.Services.Auth.Domain.Entities;
 
 namespace YiPix.Services.Auth.Infrastructure.Data;
 
+/// <summary>
+/// Auth 数据库上下文 - 使用 "auth" schema 隔离
+/// 包含 Users 和 RefreshTokens 两张表
+/// </summary>
 public class AuthDbContext : DbContext
 {
     public AuthDbContext(DbContextOptions<AuthDbContext> options) : base(options) { }

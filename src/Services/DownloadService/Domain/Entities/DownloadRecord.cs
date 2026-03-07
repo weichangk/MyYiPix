@@ -2,6 +2,9 @@ using YiPix.BuildingBlocks.Common.Domain;
 
 namespace YiPix.Services.Download.Domain.Entities;
 
+/// <summary>
+/// 下载记录实体 - 记录每次下载请求（用于统计和分析）
+/// </summary>
 public class DownloadRecord : BaseEntity
 {
     public Guid? UserId { get; set; }

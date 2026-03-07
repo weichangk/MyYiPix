@@ -4,11 +4,15 @@ using YiPix.Services.Product.Infrastructure.Data;
 
 namespace YiPix.Services.Product.Application;
 
+// ========== DTOs ==========
 public record ProductDto(Guid Id, string Name, string? Description, string Slug, string? IconUrl, string? BannerUrl, string? Features, List<PricingPlanDto> Plans);
 public record PricingPlanDto(Guid Id, string Name, string? Description, decimal Price, string Currency, string BillingCycle, string? PayPalPlanId, string? FeatureList);
 public record CreateProductRequest(string Name, string? Description, string Slug, string? IconUrl, string? BannerUrl, string? Features);
 public record CreatePlanRequest(Guid ProductId, string Name, string? Description, decimal Price, string Currency, string BillingCycle, string? PayPalPlanId, string? FeatureList, int SortOrder);
 
+/// <summary>
+/// 产品服务接口 - 产品和定价方案的 CRUD
+/// </summary>
 public interface IProductAppService
 {
     Task<ProductDto?> GetProductAsync(Guid id, CancellationToken ct = default);
@@ -18,6 +22,9 @@ public interface IProductAppService
     Task<PricingPlanDto> AddPricingPlanAsync(CreatePlanRequest request, CancellationToken ct = default);
 }
 
+/// <summary>
+/// 产品服务实现：Slug 唯一性检查，支持按 Slug 查询产品
+/// </summary>
 public class ProductAppService : IProductAppService
 {
     private readonly IProductRepository _repository;

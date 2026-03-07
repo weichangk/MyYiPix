@@ -2,6 +2,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace YiPix.Services.Subscription.Infrastructure.Data;
 
+/// <summary>
+/// 订阅仓储接口 - 订阅 CRUD、状态查询、历史记录
+/// </summary>
 public interface ISubscriptionRepository
 {
     Task<Domain.Entities.Subscription?> GetByIdAsync(Guid id, CancellationToken ct = default);

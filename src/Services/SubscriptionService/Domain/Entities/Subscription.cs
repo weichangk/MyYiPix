@@ -3,6 +3,10 @@ using YiPix.BuildingBlocks.Common.Domain;
 
 namespace YiPix.Services.Subscription.Domain.Entities;
 
+/// <summary>
+/// 订阅实体（聚合根）- 支持 Free/Monthly/Yearly/Lifetime 计划
+/// 状态流转：Active → Cancelled/Expired/PastDue/Suspended
+/// </summary>
 public class Subscription : AggregateRoot
 {
     public Guid UserId { get; set; }

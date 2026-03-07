@@ -5,6 +5,10 @@ using YiPix.Services.TaskProcessing.Application;
 
 namespace YiPix.Services.TaskProcessing.Controllers;
 
+/// <summary>
+/// 任务控制器 - 创建、查询、取消图片处理任务
+/// 所有接口需要 JWT 认证
+/// </summary>
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]

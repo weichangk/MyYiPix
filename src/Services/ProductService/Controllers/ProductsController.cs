@@ -5,6 +5,10 @@ using YiPix.Services.Product.Application;
 
 namespace YiPix.Services.Product.Controllers;
 
+/// <summary>
+/// 产品控制器 - 管理产品信息和定价方案
+/// 查询接口公开，创建接口仅管理员可用
+/// </summary>
 [ApiController]
 [Route("api/[controller]")]
 public class ProductsController : ControllerBase

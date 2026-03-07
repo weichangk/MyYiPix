@@ -7,6 +7,9 @@ using YiPix.Services.Subscription.Infrastructure.Data;
 
 namespace YiPix.Services.Subscription.Application;
 
+/// <summary>
+/// 订阅服务接口 - 订阅生命周期管理
+/// </summary>
 public interface ISubscriptionAppService
 {
     Task<SubscriptionDto> GetActiveSubscriptionAsync(Guid userId, CancellationToken ct = default);
@@ -17,6 +20,9 @@ public interface ISubscriptionAppService
     Task<SubscriptionStatusResponse> CheckStatusAsync(Guid userId, CancellationToken ct = default);
 }
 
+/// <summary>
+/// 订阅服务实现：管理订阅创建、激活、取消，并通过事件总线发布状态变更事件
+/// </summary>
 public class SubscriptionAppService : ISubscriptionAppService
 {
     private readonly ISubscriptionRepository _repository;

@@ -3,6 +3,9 @@ using YiPix.Services.Product.Domain.Entities;
 
 namespace YiPix.Services.Product.Infrastructure.Data;
 
+/// <summary>
+/// 产品仓储接口 - 产品和定价方案的 CRUD 查询
+/// </summary>
 public interface IProductRepository
 {
     Task<Domain.Entities.Product?> GetByIdAsync(Guid id, CancellationToken ct = default);

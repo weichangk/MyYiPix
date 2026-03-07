@@ -3,6 +3,12 @@ using YiPix.BuildingBlocks.Common.Domain;
 
 namespace YiPix.Services.TaskProcessing.Domain.Entities;
 
+/// <summary>
+/// 图片处理任务实体（聚合根）
+/// TaskType: Convert/Compress/Crop/AIEnhance/Batch
+/// Status: Pending → Processing → Completed/Failed/Cancelled
+/// Parameters 字段存储 JSON 格式的任务参数
+/// </summary>
 public class ProcessingTask : AggregateRoot
 {
     public Guid UserId { get; set; }
