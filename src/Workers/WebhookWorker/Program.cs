@@ -1,4 +1,6 @@
+using YiPix.BuildingBlocks.Contracts.Events;
 using YiPix.BuildingBlocks.EventBus;
+using YiPix.BuildingBlocks.EventBus.Abstractions;
 using YiPix.BuildingBlocks.Logging;
 using YiPix.Workers.Webhook;
 using YiPix.Workers.Webhook.Handlers;
@@ -13,5 +15,9 @@ var host = Host.CreateDefaultBuilder(args)
         services.AddHostedService<WebhookWorker>();
     })
     .Build();
+
+// 订阅事件
+var eventBus = host.Services.GetRequiredService<IEventBus>();
+eventBus.Subscribe<PaymentCompletedEvent, PaymentCompletedEventHandler>();
 
 host.Run();

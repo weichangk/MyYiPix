@@ -16,7 +16,7 @@ public record SubscriptionCancelledEvent(Guid UserId, Guid SubscriptionId) : Int
 public record SubscriptionExpiredEvent(Guid UserId, Guid SubscriptionId) : IntegrationEvent;
 
 // Payment Events
-public record PaymentCompletedEvent(Guid UserId, Guid PaymentId, decimal Amount, string Currency) : IntegrationEvent;
+public record PaymentCompletedEvent(Guid UserId, Guid PaymentId, decimal Amount, string Currency, string PlanId, string PaymentType) : IntegrationEvent;
 public record PaymentFailedEvent(Guid UserId, Guid PaymentId, string Reason) : IntegrationEvent;
 
 // Download Events

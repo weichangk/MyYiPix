@@ -19,6 +19,7 @@
     <ProjectReference Include="..\..\BuildingBlocks\EventBus\YiPix.BuildingBlocks.EventBus.csproj" />
     <ProjectReference Include="..\..\BuildingBlocks\Logging\YiPix.BuildingBlocks.Logging.csproj" />
     <ProjectReference Include="..\..\BuildingBlocks\Security\YiPix.BuildingBlocks.Security.csproj" />
+    <ProjectReference Include="..\..\BuildingBlocks\PayPal\YiPix.BuildingBlocks.PayPal.csproj" />
   </ItemGroup>
 
 </Project>

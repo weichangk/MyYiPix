@@ -10,6 +10,7 @@ public interface IPaymentRepository
 {
     Task<Domain.Entities.Payment?> GetByIdAsync(Guid id, CancellationToken ct = default);
     Task<Domain.Entities.Payment?> GetByPayPalOrderIdAsync(string paypalOrderId, CancellationToken ct = default);
+    Task<Domain.Entities.Payment?> GetByPayPalSubscriptionIdAsync(string paypalSubscriptionId, CancellationToken ct = default);
     Task<List<Domain.Entities.Payment>> GetByUserIdAsync(Guid userId, CancellationToken ct = default);
     Task<Domain.Entities.Payment> CreateAsync(Domain.Entities.Payment payment, CancellationToken ct = default);
     Task UpdateAsync(Domain.Entities.Payment payment, CancellationToken ct = default);
@@ -28,6 +29,12 @@ public class PaymentRepository : IPaymentRepository
 
     public async Task<Domain.Entities.Payment?> GetByPayPalOrderIdAsync(string paypalOrderId, CancellationToken ct = default)
         => await _context.Payments.FirstOrDefaultAsync(p => p.PayPalOrderId == paypalOrderId, ct);
+
+    public async Task<Domain.Entities.Payment?> GetByPayPalSubscriptionIdAsync(string paypalSubscriptionId, CancellationToken ct = default)
+        => await _context.Payments
+            .Where(p => p.PayPalSubscriptionId == paypalSubscriptionId)
+            .OrderByDescending(p => p.CreatedAt)
+            .FirstOrDefaultAsync(ct);
 
     public async Task<List<Domain.Entities.Payment>> GetByUserIdAsync(Guid userId, CancellationToken ct = default)
         => await _context.Payments.Where(p => p.UserId == userId).OrderByDescending(p => p.CreatedAt).ToListAsync(ct);

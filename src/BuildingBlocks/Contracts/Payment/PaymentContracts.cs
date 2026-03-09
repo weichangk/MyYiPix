@@ -15,7 +15,8 @@ public record PaymentDto(
     string Currency,
     PaymentStatus Status,
     string PayPalOrderId,
-    DateTime CreatedAt
+    DateTime CreatedAt,
+    string? ApproveUrl = null
 );
 
 public record CreatePaymentRequest(Guid UserId, string PlanId, string ReturnUrl, string CancelUrl);

@@ -3,10 +3,11 @@ using YiPix.BuildingBlocks.Common.Middleware;
 using YiPix.BuildingBlocks.EventBus;
 using YiPix.BuildingBlocks.Logging;
 using YiPix.BuildingBlocks.Security;
+using YiPix.BuildingBlocks.PayPal;
 using Scalar.AspNetCore;
-using Microsoft.Extensions.Options;
 using YiPix.Services.Payment.Application;
 using YiPix.Services.Payment.Infrastructure.Data;
+using PayPalOptions = YiPix.BuildingBlocks.PayPal.PayPalOptions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,8 +18,8 @@ builder.Host.UseYiPixSerilog("PaymentService");
 builder.Services.AddDbContext<PaymentDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// PayPal 配置
-builder.Services.Configure<PayPalOptions>(
+// PayPal 客户端（统一使用 BuildingBlocks.PayPal）
+builder.Services.AddPayPalClient(
     builder.Configuration.GetSection(PayPalOptions.SectionName));
 
 // 仓储

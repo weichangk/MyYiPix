@@ -1,10 +1,14 @@
 using Microsoft.EntityFrameworkCore;
 using YiPix.BuildingBlocks.Common.Middleware;
+using YiPix.BuildingBlocks.Contracts.Events;
 using YiPix.BuildingBlocks.EventBus;
+using YiPix.BuildingBlocks.EventBus.Abstractions;
 using YiPix.BuildingBlocks.Logging;
 using YiPix.BuildingBlocks.Security;
+using YiPix.BuildingBlocks.PayPal;
 using Scalar.AspNetCore;
 using YiPix.Services.Subscription.Application;
+using YiPix.Services.Subscription.Handlers;
 using YiPix.Services.Subscription.Infrastructure.Data;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -16,10 +20,16 @@ builder.Host.UseYiPixSerilog("SubscriptionService");
 builder.Services.AddDbContext<SubscriptionDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+// PayPal 客户端（用于取消订阅等操作）
+builder.Services.AddPayPalClient(
+    builder.Configuration.GetSection(PayPalOptions.SectionName));
+
 // 仓储
 builder.Services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
 // 应用服务
 builder.Services.AddScoped<ISubscriptionAppService, SubscriptionAppService>();
+// 事件处理器
+builder.Services.AddScoped<PaymentCompletedEventHandler>();
 
 // JWT 认证
 builder.Services.AddYiPixJwtAuth(builder.Configuration);
@@ -63,5 +73,9 @@ if (app.Environment.IsDevelopment())
     var db = scope.ServiceProvider.GetRequiredService<SubscriptionDbContext>();
     await db.Database.MigrateAsync();
 }
+
+// 订阅事件：支付完成 → 自动激活/续期订阅
+var eventBus = app.Services.GetRequiredService<IEventBus>();
+eventBus.Subscribe<PaymentCompletedEvent, PaymentCompletedEventHandler>();
 
 app.Run();

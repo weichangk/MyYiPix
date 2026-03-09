@@ -79,8 +79,8 @@ YiPix 平台使用 PayPal 作为支付网关，支持两种支付模式：
 
 | PayPal 操作 | 项目 API | 代码位置 | 状态 |
 |---|---|---|---|
-| Create Order | `POST /api/payments` | `PaymentAppService.CreatePaymentAsync` | ⚠️ TODO: 调用 PayPal API |
-| Capture Order | `POST /api/payments/capture` | `PaymentAppService.CapturePaymentAsync` | ⚠️ TODO: 调用 PayPal API |
+| Create Order | `POST /api/payments` | `PaymentAppService.CreatePaymentAsync` | ✅ 已实现（调用 `IPayPalClient.CreateOrderAsync`） |
+| Capture Order | `POST /api/payments/capture` | `PaymentAppService.CapturePaymentAsync` | ✅ 已实现（调用 `IPayPalClient.CaptureOrderAsync`） |
 
 ---
 
@@ -155,10 +155,11 @@ YiPix 平台使用 PayPal 作为支付网关，支持两种支付模式：
 
 | PayPal 操作 | 项目字段/API | 状态 |
 |---|---|---|
-| plan_id | `Payment.PlanId` / `CreatePaymentRequest.PlanId` | 字段已定义 |
-| subscription_id | `Payment.PayPalSubscriptionId` / `Subscription.PayPalSubscriptionId` | 字段已定义 |
-| Create Subscription | — | ❌ 尚未实现 |
-| Cancel Subscription | `SubscriptionAppService.CancelSubscriptionAsync` | ⚠️ 本地取消已实现，PayPal 侧取消未实现 |
+| plan_id | `Payment.PlanId` / `CreatePaymentRequest.PlanId` → `PayPalOptions.PlanIdMappings` 映射 | ✅ 字段已定义，映射已实现 |
+| subscription_id | `Payment.PayPalSubscriptionId` / `Subscription.PayPalSubscriptionId` | ✅ 字段已定义 |
+| Create Subscription | `PaymentAppService.CreatePaymentAsync` → `IPayPalClient.CreateSubscriptionAsync` | ✅ 已实现（Monthly/Yearly 自动走 Subscriptions API） |
+| Cancel Subscription | `SubscriptionAppService.CancelSubscriptionAsync` → `IPayPalClient.CancelSubscriptionAsync` | ✅ 已实现（本地取消 + PayPal 侧取消联动） |
+| Get Subscription Detail | `IPayPalClient.GetSubscriptionDetailAsync` | ✅ 已实现 |
 
 ---
 
@@ -179,16 +180,16 @@ PayPal 在发生特定事件时，会主动向商户预先注册的 URL 发送 H
 
 ### 4.3 常见事件类型
 
-| PayPal 事件 | 触发时机 | 项目应处理的操作 |
-|---|---|---|
-| `PAYMENT.CAPTURE.COMPLETED` | 一次性支付到账 | 标记 Payment 为 Completed |
-| `PAYMENT.CAPTURE.DENIED` | 支付被拒绝 | 标记 Payment 为 Failed |
-| `PAYMENT.CAPTURE.REFUNDED` | 支付被退款 | 标记 Payment 为 Refunded |
-| `BILLING.SUBSCRIPTION.ACTIVATED` | 订阅激活 | 创建/激活 Subscription |
-| `BILLING.SUBSCRIPTION.CANCELLED` | 订阅被取消 | 取消 Subscription |
-| `BILLING.SUBSCRIPTION.SUSPENDED` | 订阅暂停（扣款失败） | 标记 Subscription 为 PastDue/Suspended |
-| `BILLING.SUBSCRIPTION.EXPIRED` | 订阅到期 | 标记 Subscription 为 Expired |
-| `PAYMENT.SALE.COMPLETED` | 订阅周期扣款成功 | 记录续费、延长有效期 |
+| PayPal 事件 | 触发时机 | 项目处理方法 | 实现状态 |
+|---|---|---|---|
+| `PAYMENT.CAPTURE.COMPLETED` | 一次性支付到账 | `HandlePaymentCaptureCompletedAsync` — 通过 `order_id` 关联 Payment，标记 Completed，发布 `PaymentCompletedEvent` | ✅ 完整 |
+| `PAYMENT.CAPTURE.DENIED` | 支付被拒绝 | `HandlePaymentCaptureDeniedAsync` — 记录日志 | ⚠️ 骨架（未关联 Payment 记录） |
+| `PAYMENT.CAPTURE.REFUNDED` | 支付被退款 | `HandlePaymentCaptureRefundedAsync` — 记录日志 | ⚠️ 骨架（未标记 Refunded） |
+| `BILLING.SUBSCRIPTION.ACTIVATED` | 订阅激活 | `HandleSubscriptionActivatedAsync` — 通过 SubscriptionId 查找 Payment，标记 Completed，发布 `PaymentCompletedEvent` | ✅ 完整 |
+| `BILLING.SUBSCRIPTION.CANCELLED` | 订阅被取消 | `HandleSubscriptionCancelledAsync` — 查找 Payment 并记录日志 | ⚠️ 骨架（未同步到 SubscriptionService） |
+| `BILLING.SUBSCRIPTION.SUSPENDED` | 订阅暂停（扣款失败） | `HandleSubscriptionSuspendedAsync` — 记录日志 | ⚠️ 骨架（未更新状态） |
+| `BILLING.SUBSCRIPTION.EXPIRED` | 订阅到期 | — | ❌ 尚未处理 |
+| `PAYMENT.SALE.COMPLETED` | 订阅周期扣款成功 | `HandlePaymentSaleCompletedAsync` — 通过 `billing_agreement_id` 关联原始订阅，创建续费 Payment 记录，发布 `PaymentCompletedEvent` | ✅ 完整 |
 
 ### 4.4 Webhook 处理流程
 
@@ -207,21 +208,31 @@ PayPal 在发生特定事件时，会主动向商户预先注册的 URL 发送 H
     │  Body: { event_type, resource, ... }
     │─────────────────────────>│
     │                          │
-    │                          │ ① 验证签名（调用 PayPal Verify API）
-    │                          │    ⚠️ 当前为 TODO
+    │                          │ ① 读取原始 Body (StreamReader)
     │                          │
-    │                          │ ② 幂等性检查
+    │                          │ ② 验证签名 ✅
+    │                          │    调用 PayPal Verify Webhook
+    │                          │    Signature API
+    │                          │    (WebhookId 为空时跳过验签)
+    │                          │
+    │                          │ ③ 解析 JSON ✅
+    │                          │    提取 event_type 和 resource.id
+    │                          │
+    │                          │ ④ 幂等性检查
     │                          │    查询 WebhookLog 表
     │                          │    (EventType + ResourceId) 是否已处理
     │                          │    → 已处理则直接跳过
     │                          │
-    │                          │ ③ 根据 event_type 分发处理
+    │                          │ ⑤ 根据 event_type 分发处理 ✅
     │                          │    → PAYMENT.CAPTURE.COMPLETED
+    │                          │    → PAYMENT.CAPTURE.DENIED
+    │                          │    → PAYMENT.CAPTURE.REFUNDED
     │                          │    → BILLING.SUBSCRIPTION.ACTIVATED
     │                          │    → BILLING.SUBSCRIPTION.CANCELLED
-    │                          │    ⚠️ 各分支具体逻辑为 TODO
+    │                          │    → BILLING.SUBSCRIPTION.SUSPENDED
+    │                          │    → PAYMENT.SALE.COMPLETED
     │                          │
-    │                          │ ④ 记录 WebhookLog
+    │                          │ ⑥ 记录 WebhookLog
     │                          │    (EventType, ResourceId, Payload,
     │                          │     Processed, ProcessedAt)
     │                          │
@@ -229,9 +240,9 @@ PayPal 在发生特定事件时，会主动向商户预先注册的 URL 发送 H
     │<─────────────────────────│
 ```
 
-### 4.5 签名验证（安全性）
+### 4.5 签名验证（安全性） ✅ 已实现
 
-每个 Webhook 请求头携带签名信息，后端应调用 PayPal 的 Verify Webhook Signature API 验证：
+每个 Webhook 请求头携带签名信息，后端调用 PayPal 的 Verify Webhook Signature API 验证：
 
 ```
 POST https://api-m.paypal.com/v1/notifications/verify-webhook-signature
@@ -247,7 +258,12 @@ POST https://api-m.paypal.com/v1/notifications/verify-webhook-signature
 }
 ```
 
-返回 `verification_status: "SUCCESS"` 表示合法。**未验证签名就处理 Webhook 会有伪造回调的安全风险。**
+返回 `verification_status: "SUCCESS"` 表示合法。
+
+**实现细节**：
+- `PaymentsController.Webhook` 从请求头中提取 5 个签名 Header，连同原始 Body 传给 `IPayPalClient.VerifyWebhookSignatureAsync`
+- `PayPalClient` 内部调用 PayPal Verify API 并检查 `verification_status`
+- 当 `PayPalOptions.WebhookId` 为空时跳过验签（仅限开发环境），生产环境必须配置
 
 ### 4.6 幂等性保障
 
@@ -292,9 +308,9 @@ grant_type=client_credentials
 | Sandbox（沙箱） | `https://api-m.sandbox.paypal.com` | 开发测试 |
 | Live（生产） | `https://api-m.paypal.com` | 正式环境 |
 
-### 5.3 项目配置建议
+### 5.3 项目配置
 
-在 `appsettings.json` 中添加：
+在 `appsettings.Development.json` 中配置（PaymentService 和 SubscriptionService 均需要）：
 
 ```json
 {
@@ -302,12 +318,28 @@ grant_type=client_credentials
     "ClientId": "YOUR_CLIENT_ID",
     "ClientSecret": "YOUR_CLIENT_SECRET",
     "BaseUrl": "https://api-m.sandbox.paypal.com",
-    "WebhookId": "YOUR_WEBHOOK_ID"
+    "WebhookId": "YOUR_WEBHOOK_ID",
+    "PlanIdMappings": {
+      "Monthly": "P-MONTHLY_PLAN_ID",
+      "Yearly": "P-YEARLY_PLAN_ID"
+    },
+    "PlanPrices": {
+      "Monthly": 9.90,
+      "Yearly": 99.00,
+      "Lifetime": 199.00
+    }
   }
 }
 ```
 
+**配置说明**：
+- `PlanIdMappings`：将项目中的计划名称映射到 PayPal 预先创建的 Plan ID（仅 PaymentService 使用）
+- `PlanPrices`：各计划的价格，用于创建 Orders API 的一次性付费金额
+- `WebhookId`：在 PayPal 开发者后台创建 Webhook 后获得的 ID，用于签名验证
+
 生产环境通过环境变量覆盖敏感信息。
+
+**DI 注册方式**：
 
 ---
 
@@ -320,46 +352,51 @@ grant_type=client_credentials
 | ✅ Payment 实体与数据库 | 支持 `PayPalOrderId`、`PayPalSubscriptionId`、状态流转 |
 | ✅ Subscription 实体与数据库 | 支持多种计划和状态、变更历史记录 |
 | ✅ Webhook 幂等机制 | `WebhookLog` 表 + `(EventType, ResourceId)` 去重 |
-| ✅ 事件总线集成 | `PaymentCompletedEvent` 发布 → `WebhookWorker` 消费 |
+| ✅ 事件总线集成 | `PaymentCompletedEvent` 发布 → SubscriptionService + WebhookWorker 消费 |
 | ✅ API 端点定义 | 创建支付、捕获支付、Webhook 接收入口 |
-| ✅ DTO 与 Contract 定义 | `CreatePaymentRequest`（含 `ReturnUrl`、`CancelUrl`）等 |
+| ✅ DTO 与 Contract 定义 | `CreatePaymentRequest`（含 `ReturnUrl`、`CancelUrl`）、`PaymentDto`（含 `ApproveUrl`）等 |
+| ✅ BuildingBlocks/PayPal 模块 | `IPayPalClient` 接口 + `PayPalClient` HttpClient 封装（含 OAuth2 Token 缓存） |
+| ✅ PayPal Orders API 集成 | `CreateOrderAsync` + `CaptureOrderAsync` |
+| ✅ PayPal Subscriptions API 集成 | `CreateSubscriptionAsync` + `CancelSubscriptionAsync` + `GetSubscriptionDetailAsync` |
+| ✅ Webhook 签名验证 | `VerifyWebhookSignatureAsync` 调用 PayPal Verify API |
+| ✅ Webhook JSON 正确解析 | 从原始 Body 中提取 `event_type` 和 `resource.id` |
+| ✅ 7 种 Webhook 事件分发 | `PAYMENT.CAPTURE.COMPLETED/DENIED/REFUNDED`、`BILLING.SUBSCRIPTION.ACTIVATED/CANCELLED/SUSPENDED`、`PAYMENT.SALE.COMPLETED` |
+| ✅ 支付→订阅自动串联 | SubscriptionService 消费 `PaymentCompletedEvent`，通过 `ActivateOrRenewByPaymentAsync` 自动创建/续期订阅 |
+| ✅ 订阅续费记录 | `PAYMENT.SALE.COMPLETED` 创建续费 Payment 记录 |
+| ✅ PayPal 侧取消联动 | 取消订阅时同步调用 PayPal Cancel Subscription API |
+| ✅ OAuth2 Token 缓存 | `SemaphoreSlim` 保护、提前 60s 刷新 |
 
-### 6.2 待实现（TODO）
+### 6.2 待完善
 
-| 优先级 | 功能 | 对应代码位置 |
+| 优先级 | 功能 | 说明 |
 |---|---|---|
-| 🔴 P0 | 调用 PayPal Create Order API | `PaymentAppService.CreatePaymentAsync` |
-| 🔴 P0 | 调用 PayPal Capture Order API | `PaymentAppService.CapturePaymentAsync` |
-| 🔴 P0 | 验证 Webhook 签名 | `PaymentsController.Webhook` |
-| 🔴 P0 | 正确解析 Webhook JSON（当前硬编码） | `PaymentsController.Webhook` |
-| 🔴 P0 | 支付完成后激活订阅 | `WebhookWorker.PaymentCompletedEventHandler` |
-| 🟡 P1 | 调用 PayPal Create Subscription API | 尚无代码 |
-| 🟡 P1 | 调用 PayPal Cancel Subscription API | `SubscriptionAppService.CancelSubscriptionAsync` |
-| 🟡 P1 | Webhook 各事件类型的具体业务逻辑 | `PaymentAppService.ProcessWebhookAsync` |
-| 🟢 P2 | PayPal Token 缓存与刷新 | 尚无代码 |
+| 🟡 P1 | `PAYMENT.CAPTURE.DENIED` 处理 | 需关联 Payment 记录并标记 Failed |
+| 🟡 P1 | `PAYMENT.CAPTURE.REFUNDED` 处理 | 需关联 Payment 记录并标记 Refunded |
+| 🟡 P1 | `BILLING.SUBSCRIPTION.CANCELLED` Webhook 处理 | 需同步更新 SubscriptionService 状态 |
+| 🟡 P1 | `BILLING.SUBSCRIPTION.SUSPENDED` Webhook 处理 | 需同步更新 SubscriptionService 状态 |
+| 🟡 P1 | 支付确认邮件 | WebhookWorker 中发送 |
+| 🟡 P1 | 统计事件记录 | WebhookWorker 中记录 |
+| 🟢 P2 | `BILLING.SUBSCRIPTION.EXPIRED` 处理 | 尚未添加处理器 |
+| 🟢 P2 | 到期订阅自动检查 | 后台定时任务 |
 
 ---
 
-## 7. 推荐实现方案
+## 7. 已实现的模块结构
 
-### 7.1 引入 PayPal SDK 或 HttpClient 封装
-
-建议在 `BuildingBlocks` 中新增 `PayPal` 模块：
+### 7.1 BuildingBlocks/PayPal 模块
 
 ```
 BuildingBlocks/
 └── PayPal/
-    ├── IPayPalClient.cs           # 接口定义
-    ├── PayPalClient.cs            # HttpClient 封装
-    ├── PayPalOptions.cs           # 配置类
+    ├── IPayPalClient.cs           # 接口定义（6 个方法）
+    ├── PayPalClient.cs            # HttpClient 封装（含 Token 缓存）
+    ├── PayPalOptions.cs           # 配置类（含 PlanIdMappings、PlanPrices）
+    ├── PayPalServiceExtensions.cs # DI 注册扩展方法
     └── Models/
-        ├── CreateOrderRequest.cs
-        ├── CreateOrderResponse.cs
-        ├── CaptureOrderResponse.cs
-        └── WebhookVerifyRequest.cs
+        └── PayPalModels.cs        # 所有 API 请求/响应模型
 ```
 
-### 7.2 核心接口设计
+### 7.2 核心接口
 
 ```csharp
 public interface IPayPalClient
@@ -373,6 +410,7 @@ public interface IPayPalClient
     Task<CreateSubscriptionResponse> CreateSubscriptionAsync(string planId,
         string returnUrl, string cancelUrl);
     Task CancelSubscriptionAsync(string subscriptionId, string reason);
+    Task<SubscriptionDetailResponse> GetSubscriptionDetailAsync(string subscriptionId);
 
     // Webhook
     Task<bool> VerifyWebhookSignatureAsync(string webhookId,
@@ -380,7 +418,14 @@ public interface IPayPalClient
 }
 ```
 
-### 7.3 前端集成方式
+### 7.3 关键实现细节
+
+- **OAuth2 Token 管理**：使用 `SemaphoreSlim` 保证并发安全，缓存 Token 直到过期前 60 秒
+- **JSON 序列化**：使用 `snake_case` 命名策略匹配 PayPal API 风格
+- **HttpClient**：通过 `IHttpClientFactory` 管理，支持连接池复用
+- **错误处理**：API 调用失败时抛出异常，包含 PayPal 错误响应详情
+
+### 7.4 前端集成方式
 
 推荐使用 **PayPal JavaScript SDK**，可在前端直接渲染支付按钮，无需重定向：
 

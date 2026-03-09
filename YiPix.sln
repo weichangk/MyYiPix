@@ -51,6 +51,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YiPix.Workers.Webhook", "sr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YiPix.Workers.Analytics", "src\Workers\AnalyticsWorker\YiPix.Workers.Analytics.csproj", "{E5F7DD9B-175B-4545-B99F-E4949A9FB5CA}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YiPix.BuildingBlocks.PayPal", "src\BuildingBlocks\PayPal\YiPix.BuildingBlocks.PayPal.csproj", "{862EC79A-1A22-49BD-98B9-CD9F78B5B909}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -265,6 +267,18 @@ Global
 		{E5F7DD9B-175B-4545-B99F-E4949A9FB5CA}.Release|x64.Build.0 = Release|Any CPU
 		{E5F7DD9B-175B-4545-B99F-E4949A9FB5CA}.Release|x86.ActiveCfg = Release|Any CPU
 		{E5F7DD9B-175B-4545-B99F-E4949A9FB5CA}.Release|x86.Build.0 = Release|Any CPU
+		{862EC79A-1A22-49BD-98B9-CD9F78B5B909}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{862EC79A-1A22-49BD-98B9-CD9F78B5B909}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{862EC79A-1A22-49BD-98B9-CD9F78B5B909}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{862EC79A-1A22-49BD-98B9-CD9F78B5B909}.Debug|x64.Build.0 = Debug|Any CPU
+		{862EC79A-1A22-49BD-98B9-CD9F78B5B909}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{862EC79A-1A22-49BD-98B9-CD9F78B5B909}.Debug|x86.Build.0 = Debug|Any CPU
+		{862EC79A-1A22-49BD-98B9-CD9F78B5B909}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{862EC79A-1A22-49BD-98B9-CD9F78B5B909}.Release|Any CPU.Build.0 = Release|Any CPU
+		{862EC79A-1A22-49BD-98B9-CD9F78B5B909}.Release|x64.ActiveCfg = Release|Any CPU
+		{862EC79A-1A22-49BD-98B9-CD9F78B5B909}.Release|x64.Build.0 = Release|Any CPU
+		{862EC79A-1A22-49BD-98B9-CD9F78B5B909}.Release|x86.ActiveCfg = Release|Any CPU
+		{862EC79A-1A22-49BD-98B9-CD9F78B5B909}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -293,5 +307,6 @@ Global
 		{DBD166B0-B6C2-4F13-9061-2BFBD9EBA1F6} = {08385EEE-2777-6EBF-B640-5DBB7061E646}
 		{911ACFA8-5569-4984-8F4D-E5525532789E} = {08385EEE-2777-6EBF-B640-5DBB7061E646}
 		{E5F7DD9B-175B-4545-B99F-E4949A9FB5CA} = {08385EEE-2777-6EBF-B640-5DBB7061E646}
+		{862EC79A-1A22-49BD-98B9-CD9F78B5B909} = {90298CBA-BD6F-3A0A-69D5-97CAD7B05E7E}
 	EndGlobalSection
 EndGlobal
