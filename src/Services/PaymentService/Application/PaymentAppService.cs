@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Options;
 using YiPix.BuildingBlocks.Common.Exceptions;
 using YiPix.BuildingBlocks.Contracts.Events;
 using YiPix.BuildingBlocks.Contracts.Payment;
@@ -26,11 +27,13 @@ public class PaymentAppService : IPaymentAppService
 {
     private readonly IPaymentRepository _repository;
     private readonly IEventBus _eventBus;
+    private readonly PayPalOptions _paypalOptions;
 
-    public PaymentAppService(IPaymentRepository repository, IEventBus eventBus)
+    public PaymentAppService(IPaymentRepository repository, IEventBus eventBus, IOptions<PayPalOptions> paypalOptions)
     {
         _repository = repository;
         _eventBus = eventBus;
+        _paypalOptions = paypalOptions.Value;
     }
 
     public async Task<PaymentDto> CreatePaymentAsync(CreatePaymentRequest request, CancellationToken ct = default)

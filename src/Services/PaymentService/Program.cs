@@ -4,6 +4,7 @@ using YiPix.BuildingBlocks.EventBus;
 using YiPix.BuildingBlocks.Logging;
 using YiPix.BuildingBlocks.Security;
 using Scalar.AspNetCore;
+using Microsoft.Extensions.Options;
 using YiPix.Services.Payment.Application;
 using YiPix.Services.Payment.Infrastructure.Data;
 
@@ -15,6 +16,10 @@ builder.Host.UseYiPixSerilog("PaymentService");
 // 数据库
 builder.Services.AddDbContext<PaymentDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// PayPal 配置
+builder.Services.Configure<PayPalOptions>(
+    builder.Configuration.GetSection(PayPalOptions.SectionName));
 
 // 仓储
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
