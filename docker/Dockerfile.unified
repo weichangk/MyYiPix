@@ -30,6 +30,7 @@ COPY src/BuildingBlocks/Contracts/YiPix.BuildingBlocks.Contracts.csproj src/Buil
 COPY src/BuildingBlocks/EventBus/YiPix.BuildingBlocks.EventBus.csproj src/BuildingBlocks/EventBus/
 COPY src/BuildingBlocks/Logging/YiPix.BuildingBlocks.Logging.csproj src/BuildingBlocks/Logging/
 COPY src/BuildingBlocks/Security/YiPix.BuildingBlocks.Security.csproj src/BuildingBlocks/Security/
+COPY src/BuildingBlocks/PayPal/YiPix.BuildingBlocks.PayPal.csproj src/BuildingBlocks/PayPal/
 
 # Services
 COPY src/Services/AuthService/YiPix.Services.Auth.csproj src/Services/AuthService/
