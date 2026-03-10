@@ -53,7 +53,7 @@ public class SubscriptionsController : ControllerBase
     {
         var result = await _service.CreateSubscriptionAsync(request, ct);
         return CreatedAtAction(nameof(GetActive), new { userId = request.UserId },
-            ApiResponse<SubscriptionDto>.Ok(result));
+            ApiResponse<SubscriptionDto>.Ok(result, code: 201));
     }
 
     /// <summary>取消订阅</summary>

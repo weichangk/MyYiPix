@@ -23,14 +23,14 @@ public class TasksController : ControllerBase
         [FromBody] CreateTaskRequest request, CancellationToken ct)
     {
         var result = await _service.CreateTaskAsync(request, ct);
-        return CreatedAtAction(nameof(GetById), new { id = result.Id }, ApiResponse<TaskDto>.Ok(result));
+        return CreatedAtAction(nameof(GetById), new { id = result.Id }, ApiResponse<TaskDto>.Ok(result, code: 201));
     }
 
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<ApiResponse<TaskDto>>> GetById(Guid id, CancellationToken ct)
     {
         var result = await _service.GetTaskAsync(id, ct);
-        if (result == null) return NotFound(ApiResponse.Fail("Task not found."));
+        if (result == null) return NotFound(ApiResponse.Fail("Task not found.", code: 404));
         return Ok(ApiResponse<TaskDto>.Ok(result));
     }
 

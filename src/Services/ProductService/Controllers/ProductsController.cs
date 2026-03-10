@@ -28,7 +28,7 @@ public class ProductsController : ControllerBase
     public async Task<ActionResult<ApiResponse<ProductDto>>> GetById(Guid id, CancellationToken ct)
     {
         var result = await _service.GetProductAsync(id, ct);
-        if (result == null) return NotFound(ApiResponse.Fail("Product not found."));
+        if (result == null) return NotFound(ApiResponse.Fail("Product not found.", code: 404));
         return Ok(ApiResponse<ProductDto>.Ok(result));
     }
 
@@ -36,7 +36,7 @@ public class ProductsController : ControllerBase
     public async Task<ActionResult<ApiResponse<ProductDto>>> GetBySlug(string slug, CancellationToken ct)
     {
         var result = await _service.GetProductBySlugAsync(slug, ct);
-        if (result == null) return NotFound(ApiResponse.Fail("Product not found."));
+        if (result == null) return NotFound(ApiResponse.Fail("Product not found.", code: 404));
         return Ok(ApiResponse<ProductDto>.Ok(result));
     }
 
@@ -46,7 +46,7 @@ public class ProductsController : ControllerBase
         [FromBody] CreateProductRequest request, CancellationToken ct)
     {
         var result = await _service.CreateProductAsync(request, ct);
-        return CreatedAtAction(nameof(GetById), new { id = result.Id }, ApiResponse<ProductDto>.Ok(result));
+        return CreatedAtAction(nameof(GetById), new { id = result.Id }, ApiResponse<ProductDto>.Ok(result, code: 201));
     }
 
     [HttpPost("plans")]

@@ -39,7 +39,7 @@ public class PaymentsController : ControllerBase
     public async Task<ActionResult<ApiResponse<PaymentDto>>> GetPayment(Guid id, CancellationToken ct)
     {
         var result = await _service.GetPaymentAsync(id, ct);
-        if (result == null) return NotFound(ApiResponse.Fail("Payment not found."));
+        if (result == null) return NotFound(ApiResponse.Fail("Payment not found.", code: 404));
         return Ok(ApiResponse<PaymentDto>.Ok(result));
     }
 
@@ -57,7 +57,7 @@ public class PaymentsController : ControllerBase
         [FromBody] CreatePaymentRequest request, CancellationToken ct)
     {
         var result = await _service.CreatePaymentAsync(request, ct);
-        return CreatedAtAction(nameof(GetPayment), new { id = result.Id }, ApiResponse<PaymentDto>.Ok(result));
+        return CreatedAtAction(nameof(GetPayment), new { id = result.Id }, ApiResponse<PaymentDto>.Ok(result, code: 201));
     }
 
     [HttpPost("capture")]

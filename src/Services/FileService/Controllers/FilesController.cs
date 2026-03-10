@@ -22,7 +22,7 @@ public class FilesController : ControllerBase
     public async Task<ActionResult<ApiResponse<UploadResult>>> Upload(
         IFormFile file, [FromQuery] string? category, [FromQuery] bool isPublic = false, CancellationToken ct = default)
     {
-        if (file.Length == 0) return BadRequest(ApiResponse.Fail("File is empty."));
+        if (file.Length == 0) return BadRequest(ApiResponse.Fail("File is empty.", code: 400));
 
         using var stream = file.OpenReadStream();
         var result = await _service.UploadAsync(stream, file.FileName, file.ContentType, file.Length, null, category, isPublic, ct);

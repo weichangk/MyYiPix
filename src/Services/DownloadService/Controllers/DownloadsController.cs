@@ -21,7 +21,7 @@ public class DownloadsController : ControllerBase
     public async Task<ActionResult<ApiResponse<ReleaseDto>>> GetLatest(string platform, CancellationToken ct)
     {
         var result = await _service.GetLatestReleaseAsync(platform, ct);
-        if (result == null) return NotFound(ApiResponse.Fail("No release found."));
+        if (result == null) return NotFound(ApiResponse.Fail("No release found.", code: 404));
         return Ok(ApiResponse<ReleaseDto>.Ok(result));
     }
 
@@ -53,7 +53,7 @@ public class DownloadsController : ControllerBase
     {
         var result = await _service.CreateReleaseAsync(request, ct);
         return CreatedAtAction(nameof(GetLatest), new { platform = request.Platform },
-            ApiResponse<ReleaseDto>.Ok(result));
+            ApiResponse<ReleaseDto>.Ok(result, code: 201));
     }
 
     [HttpGet("stats/count")]
